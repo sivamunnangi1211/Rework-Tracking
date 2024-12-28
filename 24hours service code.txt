@@ -1,0 +1,13 @@
+[Unit]
+Description=My Rework Tracking Flask App
+After=network.target
+
+[Service]
+User=cai
+Group=cai
+WorkingDirectory=/home/cai/Downloads/rework_tracking/rework_tracking
+ExecStart=/usr/bin/python3 /home/cai/Downloads/rework_tracking/rework_tracking/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

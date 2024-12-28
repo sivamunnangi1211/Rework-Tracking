@@ -1,0 +1,49 @@
+{% extends 'components/body.html' %}
+{% block page_title %} Running Batches History Report {% endblock %}
+{% block content %}
+    <div class="running-batches-history-report-container reports-main-container" style="margin-top: 30px;
+     display: flex; justify-content: center; flex-direction: column; padding: 0 30px" >
+        <div class="reports-download-container" style="display: flex; justify-content: right; margin: 20px 0;">
+            <div id="export_report_button" class="btn btn-primary export-report-button controlytics-button"
+            onclick="exportToExcel()">
+                Export
+                <i class="fa-solid fa-circle-notch fa-spin" hidden id="export_report_button_loader" style="margin-left: 10px;"></i>
+            </div>
+        </div>
+        <div class="reports-table-container">
+            <table style="border: 1px solid black" id="reports_table">
+                <thead>
+                    <tr>
+                        <th>Batch Id</th>
+                        <th>Cascade Name</th>
+                        <th>Formulation Name</th>
+                        <th>Batch Status</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                    </tr>
+                </thead>
+                <tbody id="reports_table_body">
+                    {% for report in report_data %}
+                        <tr>
+                            <td>{{ report['running_batch_id'] }}</td>
+                            <td>{{ report['cascade_name'] }}</td>
+                            <td>{{ report['formulation_name'] }}</td>
+                            <td>{{ report['batch_status'] }}</td>
+                            <td>{{ report['start_datetime'] }}</td>
+                            <td>{{ report['end_datetime'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        function exportToExcel() {
+            let table = document.getElementById("reports_table");
+            let ws = XLSX.utils.table_to_sheet(table);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rework Generation Report");
+            XLSX.writeFile(wb, "rework_generation_report.xlsx");
+        }
+    </script>
+{% endblock %}

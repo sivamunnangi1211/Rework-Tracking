@@ -1,0 +1,65 @@
+<!-- Common sidebar content -->
+<div class="sidebar">
+    <!-- Icon containers -->
+    <div class="sidebar-icon-container" onclick="location.href='/'">
+        <i class="fas fa-home sidebar-icon"></i>
+    </div>
+    {% if (session.get('user_type') == 'admin') %}
+        <div class="sidebar-icon-container" onclick="location.href='/running_batch'">
+            <i class="fas fa-stopwatch-20 sidebar-icon"></i>
+        </div>
+    {% endif %}
+
+    {% if (session.get('user_type') == 'admin' or session.get('user_type') == 'supervisor' or session.get('user_type') == 'operator') %}
+        <div class="sidebar-icon-container" onclick="location.href='/reports'">
+            <i class="fas fa-chart-line sidebar-icon"></i>
+        </div>
+    {% endif %}
+
+    {% if (session.get('user_type') == 'admin') %}
+        <div class="sidebar-icon-container" onclick="location.href='/formulations/manage'">
+            <i class="fas fa-flask sidebar-icon"></i>
+        </div>
+    {% endif %}
+
+    {% if (session.get('user_type') == 'admin') %}
+        <div class="sidebar-icon-container" onclick="location.href='/users/manage'">
+            <i class="fas fa-user-plus sidebar-icon"></i>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+
+    .sidebar {
+        width: 80px;
+        background-color: royalblue;
+        padding: 0px;
+        display: flex;
+        height: 100%;
+        min-height: calc(100vh - 80px);
+        flex-direction: column;
+        align-items: center;
+        z-index: 1;
+    }
+
+    .sidebar-icon-container {
+        background-color: royalblue;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80px;
+        width: 80px;
+        cursor: pointer;
+    }
+    .sidebar-icon-container:hover {
+        background-color: #1f3884; /* Change background color on hover */
+    }
+    .sidebar-icon {
+        font-size: 35px;
+        color: white;
+        cursor: pointer; /* Add cursor pointer for better UX */
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>

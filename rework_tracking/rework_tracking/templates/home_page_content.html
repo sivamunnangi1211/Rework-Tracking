@@ -1,0 +1,351 @@
+<style>
+    .home-page-header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid grey;
+        border-radius: 10px;
+        padding: 10px 20px 10px 10px;
+        margin: 40px 0 0;
+    }
+    .shift-container {
+        display: flex;
+        flex-direction: row;
+        margin-right: 40px;
+        border-radius: 10px;
+        border: black;
+        padding: 10px;
+    }
+
+    .shift-details {
+        display: flex;
+        flex-direction: column;
+    }
+    #shift_and_time_label {
+        font-size: medium;
+        margin-bottom: 10px;
+    }
+    #shift_and_time_value {
+        font-size: x-large;
+    }
+
+    .reader-machine-details-update {
+        padding: 40px 20px;
+        border-radius: 10px;
+        margin-top: 30px;
+        border: 1px solid grey;
+    }
+    .machine-cascade-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+
+    .formulation-scrap-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+
+    .home-scan-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .machine-details-submit-button-container {
+        display: flex;
+        justify-content: right;
+        margin-top: 50px;
+        margin-right: 40px;
+    }
+</style>
+<div id="home_page_core_content">
+    <div class="home-page-header-container row">
+        <div class="shift-container col">
+            <div class="shift-details">
+                <span id="shift_and_time_label">Shift & Time</span>
+                <span id="shift_and_time_value"></span>
+            </div>
+        </div>
+        <div id="machine-select-container" class="machine-select-container controlytics-select-container col">
+            <label class="machine-select-label controlytics-select-label" for="machine-select">Reader Machine</label>
+            <select id="machine-select" class="controlytics-select"
+                    {% if machines|length == 1 %}disabled{% endif %}> {# TODO: Decide if want operator to edit the dropdown at Childrum, if they should not edit - add this condition - (session.get('user_type') != 'admin') or #}
+                {% for machine in machines %}
+                    <option value="{{ machine.machine_id }}">{{ machine.machine_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="home-scan-container col">
+            <div class="home-scan-button-div" style="display: flex;justify-content: center;">
+                <button id="scan_button" class="home-scan-button controlytics-button" onclick="scanplodder1()">Scan</button>
+            </div>
+        </div>
+    </div>
+    <div class="reader-machine-details-update">
+        <div class="machine-cascade-container row">
+            <div id="cascade-select-container" class="cascade-select-container controlytics-select-container col">
+                <label class="cascade-select-label cascade-select-label" for="cascade-select">Cascade</label>
+                <span id="selected_cascade_name" class="selected-cascade-name controlytics-select"
+                      style="background-color: #eaeaea;">
+                    {% if machines|length > 0 %}
+                        {{ machines[0].cascade_name }}
+                    {% endif %}
+                </span>
+            </div>
+            <div id="machine-select-container" class="machine-select-container controlytics-select-container col">
+                <label class="machine-select-label controlytics-select-label" for="machine-select">Reader Machine</label>
+                <span id="selected_machine_name" class="selected-machine-name controlytics-select"
+                      style="background-color: #eaeaea;">
+                    {% if machines|length > 0 %}
+                        {{ machines[0].machine_name }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="formulation-scrap-container row">
+            <div class="formulation-select-container controlytics-select-container col">
+                <label class="formulation-select-label controlytics-select-label" for="formulation-select">Formulation</label>
+                <select id="formulation-select" class="controlytics-select" {% if (session.get('user_type') != 'admin') %}disabled{% endif %}>
+                    {% for formulation in formulations %}
+                        <option value="{{ formulation.id }}" >{{ formulation.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="scrap-select-container controlytics-select-container col">
+                <label class="scrap-select-label controlytics-select-label" for="scrap-select">Scrap Type</label>
+                <select id="scrap-select" class="controlytics-select" {% if (session.get('user_type') =='operator') %}disabled{% endif %}>
+                    {% for scrap_type in scrap_types %}
+                        <option value="{{ scrap_type.id }}">{{ scrap_type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        {% if (session.get('user_type')) != 'operator' %}
+            <div class="machine-details-submit-button-container">
+                <div id="home_details_update_button" class="btn btn-primary home-details-update-button controlytics-button">
+                    Submit
+                    <i class="fa-solid fa-circle-notch fa-spin" hidden id="home_details_update_button_loader" style="margin-left: 10px;"></i>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="home-submit-toast-container position-fixed top-0 end-0 p-3 hidden" style="margin-top: 80px" id="home_submit_toast_container" >
+    <div id="home_submit_toast" class="toast controlytics-toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="home-submit-toast-header toast-header">
+            <strong class="me-auto controlytics-toast" id="home_submit_toast_header">
+
+            </strong>
+            <small class="toast-timestamp" id="toast_timestamp"></small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="home_submit_toast_body">
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    let machines = {{ machines|tojson }};
+    let formulations = {{ formulations|tojson }};
+    let scrap_types = {{ scrap_types|tojson }};
+
+
+    console.log(machines);
+
+    window.onload = function () {
+        // Add event listener for the submit button
+        setExistingMapping();
+        let submitButton = document.getElementById("home_details_update_button");
+        if (submitButton) {
+            submitButton.addEventListener("click", function () {
+                submitSelectedMapping();
+            });
+        }
+        let machineSelect = document.getElementById("machine-select");
+        if (machineSelect) {
+            machineSelect.addEventListener("change", function () {
+                onMachineSelectChange();
+            });
+        }
+
+        let scanButton = document.getElementById("scan_button");
+        if (scanButton) {
+            scanButton.addEventListener("click", function () {
+                startScan();
+            });
+        }
+    };
+
+    function onMachineSelectChange() {
+        let selectedMachineId = document.getElementById("machine-select").value;
+        let selectedMachine = machines.find(machine => machine['machine_id'] === selectedMachineId);
+        if (selectedMachine) {
+            document.getElementById("selected_machine_name").innerText = selectedMachine['machine_name'];
+            document.getElementById("selected_cascade_name").innerText = selectedMachine['cascade_name'];
+            resetExistingMapping(selectedMachineId);
+        }
+    }
+
+    function setExistingMapping() {
+        if (machines.length > 0 && machines[0]['formulation_id'] && machines[0]['scrap_type_id']) {
+            console.log(`Setting existing mapping for machine ${machines[0]['machine_id']}
+             with formulation ${machines[0]['formulation_id']} and scrap type ${machines[0]['scrap_type_id']}`);
+            let formulationSelect = document.getElementById("formulation-select");
+            let scrapSelect = document.getElementById("scrap-select");
+            let selectedFormulation = formulations.find(formulation => formulation['id'] === machines[0]['formulation_id']);
+            let selectedScrapType = scrap_types.find(scrapType => scrapType['id'] === machines[0]['scrap_type_id']);
+            console.log(selectedFormulation, selectedScrapType)
+            if (selectedFormulation) {
+                formulationSelect.value = selectedFormulation['id'];
+            }
+            if (selectedScrapType) {
+                scrapSelect.value = selectedScrapType['id'];
+            }
+        }
+    }
+
+    function submitSelectedMapping() {
+        console.log("Submitting selected mapping...");
+        let selectedMachineId = document.getElementById("machine-select").value;
+        let selectedFormulationId = document.getElementById("formulation-select").value;
+        let selectedScrapTypeId = document.getElementById("scrap-select").value;
+
+
+        console.log(selectedMachineId, selectedFormulationId, selectedScrapTypeId);
+        console.log(formulations);
+
+        let selectedMachine = machines.find(machine => machine['machine_id'] === selectedMachineId);
+        let selectedFormulation = formulations.find(formulation => formulation['id'] == selectedFormulationId);
+        let selectedScrapType = scrap_types.find(scrapType => scrapType['id'] === selectedScrapTypeId);
+        console.log(selectedMachine, selectedFormulation, selectedScrapType)
+        if (selectedMachine && selectedFormulation && selectedScrapType) {
+            document.getElementById("home_details_update_button").classList.add("disabled");
+            document.getElementById("home_details_update_button_loader").hidden = false;
+            console.log(`Submitting selected mapping for machine ${selectedMachineId}
+             with formulation ${selectedFormulationId} and scrap type ${selectedScrapTypeId}`);
+            fetch('/tag_reader/formulation_association', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    machine_id: selectedMachineId,
+                    formulation_id: selectedFormulationId,
+                    scrap_type_id: selectedScrapTypeId,
+                    scrap_type_name: selectedScrapType['name'],
+                    formulation_name: selectedFormulation['name']
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data['status'] === 'success') {
+                    document.getElementById("home_submit_toast_header").innerText = "Data submitted successfully";
+                    document.getElementById("home_submit_toast_body").innerText = "Formulation mapping submitted successfully.";
+                    $(".home-submit-toast-header").removeClass("controlytics-error-toast")
+                        .addClass("controlytics-success-toast");
+                    let toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('home_submit_toast'));
+                    toast.show();
+                    document.getElementById("home_details_update_button").classList.remove("disabled");
+                    document.getElementById("home_details_update_button_loader").hidden = true;
+
+                    console.log("Mapping submitted successfully.");
+                } else {
+                    document.getElementById("home_submit_toast_header").innerText = "Failed to submit data";
+                    document.getElementById("home_submit_toast_body").innerText = "Failed to submit mapping. Please try again.";
+                    $(".home-submit-toast-header").addClass("controlytics-error-toast")
+                        .removeClass("controlytics-success-toast");
+                    let toast = bootstrap.Toast.getOrCreateInstance(document.getElementById('home_submit_toast'));
+                    toast.show();
+                    document.getElementById("home_details_update_button").classList.remove("disabled");
+                    document.getElementById("home_details_update_button_loader").hidden = true;
+                    console.error("Failed to submit mapping: ", data['message']);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to submit mapping: ', error);
+            });
+        }
+    }
+
+
+    function resetExistingMapping(machine_id) {
+        console.log("Resetting existing mapping...");
+        fetch('/tag_reader/formulation_association?machine_id='+machine_id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data['status'] === 'success' && data['formulation_association']
+                    && data['formulation_association']['formulation_id'] && data['formulation_association']['scrap_type_id']) {
+                console.log("Fetched existing mapping details successfully.", data);
+                let formulationSelect = document.getElementById("formulation-select");
+                let scrapSelect = document.getElementById("scrap-select");
+                let selectedFormulation = formulations.find(formulation => formulation['id'] === data['formulation_association']['formulation_id']);
+                let selectedScrapType = scrap_types.find(scrapType => scrapType['id'] === data['formulation_association']['scrap_type_id']);
+                if (selectedFormulation) {
+                    formulationSelect.value = selectedFormulation['id'];
+                }
+                if (selectedScrapType) {
+                    scrapSelect.value = selectedScrapType['id'];
+                }
+            } else {
+                let formulationSelect = document.getElementById("formulation-select");
+                let scrapSelect = document.getElementById("scrap-select");
+                formulationSelect.value = null;
+                scrapSelect.value = null;
+                console.error("Failed to reset mapping: ", data['message']);
+            }
+        })
+        .catch(error => {
+            let formulationSelect = document.getElementById("formulation-select");
+            let scrapSelect = document.getElementById("scrap-select");
+            formulationSelect.value = null;
+            scrapSelect.value = null;
+            console.error('Failed to reset mapping: ', error);
+        });
+    }
+
+
+    function startScan() {
+        console.log(`Starting scan for device ${document.getElementById("machine-select").value}`);
+        window.location.href = `/tag_reader/scan/${document.getElementById("machine-select").value}`;
+    }
+
+
+    function updateLatestBatchDetails(data) {
+        var latestBatchDetailsContainer = document.querySelector(".latest-batch-details");
+        if (latestBatchDetailsContainer) {
+            latestBatchDetailsContainer.innerHTML = `
+                <div class="batch-details">
+                    <div class="details">
+                        <h3>Running batch details:</h3>
+                    </div>
+                    <div class="detail">
+                        <input type="text" class="detail-input" value="${data && data.cascade ? data.cascade : 'NA'}" readonly>
+                    </div>
+                    <div class="detail">
+                        <input type="text" class="detail-input" value="${data && data.from_date ? data.from_date : 'NA'}" readonly>
+                    </div>
+                    <div class="detail">
+                        <input type="text" class="detail-input" value="${data && data.to_date ? data.to_date : 'NA'}" readonly>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+</script>

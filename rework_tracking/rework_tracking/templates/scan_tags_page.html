@@ -1,0 +1,287 @@
+{% extends 'components/body.html' %}
+{% block page_title %} Scanning Tags.. {% endblock %}
+{% block content %}
+    <style>
+        #scanning_tags_page_container input[type='radio'] {
+            box-sizing: border-box;
+            padding: 0;
+            height: 35px;
+            width: 35px;
+        }
+
+        #scanning_tags_page_container input[type='radio']:checked {
+            background-color: #7695f9;
+        }
+
+        #scanning_tags_page_container .scanned-tag-radio-button {
+            display: flex;
+            align-items: center;
+            padding: 10px 10px;
+        }
+
+        #scanning_tags_page_container .scanned-tag-row {
+            border: 1px solid grey;
+            border-radius: 5px;
+            margin: 0 0 10px;
+        }
+
+        #scanned_tags_display_container {
+            margin-top: 30px;
+        }
+
+        #scanned_tags_display_container .scanned-tag-radio-input {
+            margin-right: 20px;
+        }
+
+        #scanned_tags_display_container .scanned-tag-radio-label {
+            font-size: xxx-large;
+            margin: 0;
+        }
+
+        .scanning-tags-page-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid grey;
+            border-radius: 10px;
+            padding: 10px 20px 10px 10px;
+            margin: 40px 0 0;
+        }
+
+        .scanning-tags-page-header-container .shift-container {
+            display: flex;
+            flex-direction: row;
+            margin-right: 40px;
+            border-radius: 10px;
+            border: black;
+            padding: 10px;
+        }
+
+        .scanning-tags-page-header-container .shift-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scanning-tags-page-header-container #shift_and_time_label {
+            font-size: medium;
+            margin-bottom: 10px;
+        }
+
+        .scanning-tags-page-header-container #shift_and_time_value {
+            font-size: x-large;
+        }
+        #tag_submission_confirmation_model .modal-body span {
+            font-size: x-large;
+            font-weight: bold;
+        }
+
+        #tag_submission_confirmation_model .modal-body .submit-confirmation-text {
+            margin-top: 20px;
+            text-align: center;
+            font-size: x-large;
+            font-style: italic;
+        }
+
+        #tag_submission_confirmation_model .modal-body .submit-confirmation-text.overwrite-danger {
+            color: red;
+        }
+    </style>
+    <div id="scanning_tags_page_container">
+        <div class="scanning-tags-page-header-container row">
+            <div class="shift-container col">
+                <div class="shift-details">
+                    <span id="shift_and_time_label">Shift & Time</span>
+                    <span id="shift_and_time_value"></span>
+                </div>
+            </div>
+            <div id="machine-select-container" class="machine-select-container controlytics-select-container col">
+                <label class="machine-select-label controlytics-select-label" for="machine-select">Reader
+                    Machine</label>
+                <span id="selected_cascade_name" class="selected-cascade-name controlytics-select"
+                      style="background-color: #eaeaea;">
+                    {% if not error and machine %}
+                        {{ machine['machine_name'] }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <div id="scanned_tags_display_container">
+
+        </div>
+        <div class="row scanned_tags_submit_button" style="margin: 30px 0 0">
+            <div class="col scanned_tags_submit_button" style="display: flex; justify-content: center">
+                <button class="controlytics-button scanned-tags-submit-button" hidden="hidden" onclick="submitTag()">
+                    SUBMIT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade tag-submission-confirmation-model" id="tag_submission_confirmation_model" tabindex="-1"
+         aria-hidden="true" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmation</h5>
+                    <button type="button" class="close" data-dismiss="modal" onclick="cancelConfirmation()" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="submit-confirmation-tag-name-container" style="padding: 10px">
+                        <span> Tag:</span>
+                        <span id="submit_confirmation_tag_name"></span>
+                    </div>
+                    <div class="submit-confirmation-formulation-container" style="padding: 10px">
+                        <span> Formulation:</span>
+                        <span id="submit_confirmation_formulation_name"></span>
+                    </div>
+                    <div class="submit-confirmation-scrap-type-container" style="padding: 10px">
+                        <span> Scrap Type:</span>
+                        <span id="submit_confirmation_scrap_type_name"></span>
+                    </div>
+
+                    <p class="submit-confirmation-text"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="confirmSubmission()">Confirm</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="cancelConfirmation()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let machine = {{ machine|default('undefined')|tojson }} || undefined;
+        let formulationMapping = {{ formulation_mapping|default('undefined')|tojson }} || undefined;
+        let scannedTags = [];
+        let selectedTagValue = null;
+        let submittedTagHasExistingSubmission = false;
+
+        function getScannedTags() {
+            fetch(`/tag_reader/read/${machine['machine_id']}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    console.log(data['tags'].length);
+                    console.log(data['status'] === 'success' && data['tags'].length !== 0);
+                    if (data['status'] === 'success' && data['tags'].length !== 0) {
+                        console.log('Tags scanned', data['tags']);
+                        let scannedTagsDisplayContainer = document.getElementById('scanned_tags_display_container');
+                        data['tags'].forEach(tag => {
+                            if (scannedTags.includes(tag)) return;
+                            scannedTagsDisplayContainer.innerHTML += `
+                                <div class="scanned-tag">
+                                    <div class="row scanned-tag-row">
+                                        <div class="col scanned-tag-radio-button">
+                                            <input type="radio" class="scanned-tag-radio-input" id="${tag}" name="select_tag" value="${tag}" onclick="onlyOne(this)">
+                                            <label for="${tag}" class="scanned-tag-radio-label">${tag}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            scannedTags.push(tag);
+                            if (scannedTags.length > 0) {
+                                document.querySelector('.scanned-tags-submit-button').removeAttribute('hidden');
+                            }
+                        });
+                        if (selectedTagValue) {
+                            let checkboxes = document.getElementsByName('select_tag')
+                            checkboxes.forEach((item) => {
+                                if (item.value === selectedTagValue) item.checked = true
+                            })
+                        }
+                    }
+                }).catch(error => {
+                console.error('Failed to get scanned tags', error);
+            });
+        }
+
+        function onlyOne(checkbox) {
+            let checkboxes = document.getElementsByName('select_tag')
+            checkboxes.forEach((item) => {
+                selectedTagValue = checkbox.value;
+                console.log(selectedTagValue);
+                if (item !== checkbox) item.checked = false
+            })
+        }
+
+        function submitTag() {
+            let selectedTag = selectedTagValue;
+            if (!selectedTag) {
+                alert('Please select a tag to submit');
+                return;
+            }
+            fetch(`/tag_reader/tag_status/${machine['machine_id']}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tag_id: selectedTag
+                })
+            }).then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data['status'] === 'success') {
+                        submittedTagHasExistingSubmission = data['has_existing_submission'];
+                        if (submittedTagHasExistingSubmission) {
+                            $('#submit_confirmation_tag_name').text(selectedTag);
+                            $('#submit_confirmation_formulation_name').text(data['existing_formulation']);
+                            $('#submit_confirmation_scrap_type_name').text(data['existing_scrap_type']);
+                            $('.submit-confirmation-text')
+                                .text(selectedTag + ' is already mapped to other formulation and scrap type. Do you want to Overwrite?')
+                                .addClass("overwrite-danger");
+                        } else {
+                            $('#submit_confirmation_tag_name').text(selectedTag);
+                            $('#submit_confirmation_formulation_name').text(formulationMapping['formulation_name']);
+                            $('#submit_confirmation_scrap_type_name').text(formulationMapping['scrap_type_name']);
+                            $('.submit-confirmation-text').text('Submitting tag: ' + selectedTag + '. Please confirm');
+                        }
+                        $('#tag_submission_confirmation_model').modal('show');
+                    }
+                }).catch(error => {
+                    console.error('Failed to submit tag', error);
+                });
+        }
+
+        function confirmSubmission() {
+            fetch(`/tag_reader/submit_tag/${machine['machine_id']}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tag_id: selectedTagValue,
+                    machine_id: machine['machine_id'],
+                    cascade_id: machine['cascade_id'],
+                    cascade_name: machine['cascade_name'],
+                    formulation_id: formulationMapping['formulation_id'],
+                    scrap_type_id: formulationMapping['scrap_type_id'],
+                    formulation_name: formulationMapping['formulation_name'],
+                    scrap_type_name: formulationMapping['scrap_type_name'],
+                    has_existing_submission: submittedTagHasExistingSubmission
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data['status'] === 'success') {
+                    $('#tag_submission_confirmation_model').modal('hide');
+                    window.location.reload();
+                }
+            }).catch(error => {
+                console.error('Failed to submit tag', error);
+            });
+        }
+
+        function cancelConfirmation(){
+            $('#tag_submission_confirmation_model').modal('hide');
+        }
+
+        window.onload = function () {
+            setTimeout(getScannedTags, 2000);
+            setInterval(getScannedTags, 5000);
+        }
+    </script>
+{% endblock %}

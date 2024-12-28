@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tagging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .tag-container {
+            margin-bottom: 20px;
+        }
+        .tag-item {
+            margin-bottom: 5px;
+        }
+        .checkbox-container {
+            display: inline-block;
+            position: relative;
+            padding-left: 25px;
+            margin-right: 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 18px;
+            width: 18px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+        }
+        .checkbox-container:hover input ~ .checkmark {
+            background-color: #ccc;
+        }
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: #2196F3;
+        }
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+        .checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+        .checkbox-container .checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+        }
+        .button-container button {
+            padding: 10px 20px;
+            background-color: royalblue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .button-container button:hover {
+            background-color: #4169e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="tag-container">
+        <label for="tags_data">Tags Data:</label>
+        <div id="tags_data_container" class="tag-container"></div>
+    </div>
+
+    <!-- Button container -->
+    <div class="button-container">
+        <!-- Scan Button -->
+        <button id="scanButton" class="button" onclick="scan()">Scan</button>
+        <!-- Remove Button -->
+        <button id="removeButton" class="button" onclick="removeTags()">Remove</button>
+        <!-- Submit Button -->
+        <button id="submitButton" class="button" onclick="submitData()">Submit</button>
+    </div>
+<script>
+var tags_data = [];
+        function handleEndpointResponse(response) {
+            if (response && response.tags_data) {
+                // Check if tags are already present in database
+                fetch('/check_tags', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tags_data: response.tags_data })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.tags_exist) {
+                        if (confirm("One or more tags are already added. Do you want to add them again?")) {
+                            // Proceed with displaying tags
+                            displayTags(response.tags_data);
+                        } else {
+                            // Clear tags data and container
+                            clearTags();
+                        }
+                    } else {
+                        // Tags are not present, proceed with displaying tags
+                        displayTags(response.tags_data);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+            
+            if (response.tags_data.length > 1) {
+                // Display alert and prompt for removal
+                if (confirm("There are more than one tag. Do you want to remove the remaining tags?")) {
+                    // Remove remaining tags
+                    removeTags();
+                } else {
+                    // If user cancels, clear tags data and container
+                    clearTags();
+                }
+            }
+        }
+
+
+        function displayTags(tags) {
+            var tagsDataContainer = document.getElementById('tags_data_container');
+            tagsDataContainer.innerHTML = ''; // Clear previous tags
+
+            tags.forEach(function(tag) {
+                var checkboxContainer = document.createElement('label');
+                checkboxContainer.classList.add('checkbox-container');
+
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'tag';
+                checkbox.value = tag;
+
+                var checkmark = document.createElement('span');
+                checkmark.classList.add('checkmark');
+
+                checkboxContainer.appendChild(checkbox);
+                checkboxContainer.appendChild(checkmark);
+
+                var tagText = document.createElement('span');
+                tagText.classList.add('tag-text');
+                tagText.textContent = tag;
+
+                var tagItem = document.createElement('div');
+                tagItem.classList.add('tag-item');
+                tagItem.appendChild(checkboxContainer);
+                tagItem.appendChild(tagText);
+
+                tagsDataContainer.appendChild(tagItem);
+            });
+
+            // Show remove and submit buttons after displaying tags
+            document.getElementById('removeButton').style.display = 'block';
+            document.getElementById('submitButton').style.display = 'block';
+        }
+
+
+        function scan() {
+            // Make a POST request to the endpoint
+            fetch('/endpoint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'reader_name': '',
+                    'event_type': '',
+                    'event_data': []
+                })
+            })
+            .then(response => response.json())
+            .then(data => handleEndpointResponse(data))  // Call function to handle the response
+            .catch(error => console.error('Error:', error));
+        }
+
+        function removeTags() {
+            var checkedTags = document.querySelectorAll('input[name="tag"]:checked');
+
+            // Create an array to store the tags that need to be removed
+            var tagsToRemoveArray = [];
+            checkedTags.forEach(function(tag) {
+                tagsToRemoveArray.push(tag.value);
+            });
+
+            // Make a POST request to the backend to remove the selected tags
+            fetch('/remove_tags', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 'tags_to_remove': tagsToRemoveArray })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update tags_data on the frontend based on the response
+                tags_data = data.tags_data;
+                updateTagsDataField();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function updateTagsDataField() {
+            var tagsDataContainer = document.getElementById('tags_data_container');
+            tagsDataContainer.innerHTML = ''; // Clear previous tags
+            
+            if (tags_data.length > 0) {
+                tags_data.forEach(function(tag) {
+                    var checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'tag';
+                    checkbox.value = tag;
+
+                    var label = document.createElement('label');
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(tag));
+                    
+                    var tagItem = document.createElement('div');
+                    tagItem.classList.add('tag-item');
+                    tagItem.appendChild(label);
+
+                    tagsDataContainer.appendChild(tagItem);
+                });
+            }
+
+            // Show both remove and submit buttons
+            document.getElementById('removeButton').style.display = 'block';
+            document.getElementById('submitButton').style.display = 'block';
+        }
+        function clearTags() {
+            // Clear tags data and container
+            tags_data = [];
+            var tagsDataContainer = document.getElementById('tags_data_container');
+            tagsDataContainer.innerHTML = '';
+
+            // Hide remove and submit buttons
+            document.getElementById('removeButton').style.display = 'none';
+            document.getElementById('submitButton').style.display = 'none';
+        }
+
+        function submitData() {
+            // Check if there is more than one tag
+            if (tags_data.length > 1) {
+                // Display alert and prevent submission
+                alert("Please remove all tags,add one tag only");
+            } else if (tags_data.length === 1) {
+                // Get values from dropdown fields
+                var dropdown1Value = document.getElementById('dropdown1').value;
+                var metalTypesValue = document.getElementById('metal_types').value;
+                var userDefinedCascadeValue = document.getElementById('user_defined_cascade').value;
+
+                // Construct URL with all the data
+                var url = '/next_page.html?';
+                url += 'dropdown1=' + encodeURIComponent(dropdown1Value);
+                url += '&metal_types=' + encodeURIComponent(metalTypesValue);
+                url += '&user_defined_cascade=' + encodeURIComponent(userDefinedCascadeValue);
+                url += '&shift_time=' + encodeURIComponent(document.getElementById('shift_time').value);
+                url += '&tags_data=' + encodeURIComponent(JSON.stringify(tags_data));
+
+                // Redirect to the next page
+                window.location.href = url;
+            }
+        }
+    </script>
+</body>
+</html>

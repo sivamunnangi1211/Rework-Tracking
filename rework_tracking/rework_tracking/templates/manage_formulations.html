@@ -1,0 +1,121 @@
+{% extends 'components/body.html' %}
+{% block page_title %} Manage Formulations {% endblock %}
+{% block content %}
+    <style>
+        .formulations-container th {
+            font-size: xx-large;
+            font-weight: 500;
+            color: #000;
+            text-align: center;
+        }
+        .formulations-container tr {
+            line-height: 50px;
+        }
+        .formulations-container td {
+            font-size: x-large;
+            font-weight: 400;
+            color: #000;
+        }
+    </style>
+    <div class="formulations-container">
+        <div class="row">
+            <div class="col-md-12" >
+                <div class="formulations-header" style="display: flex; flex-direction: row; align-content: center; justify-content: right; margin-bottom: 30px">
+                    <div class="formulation-name-input-container controlytics-select-container">
+                        <input type="text" id="formulation_name_input" class="controlytics-select" placeholder="Formulation Name" style="width: 600px">
+                        <span class="formulation-name-error" style="margin-left: 10px;color: red;"></span>
+                    </div>
+                    <div class="add-formulation-button-container" style="display: flex;align-items: center">
+                        <div id="add_formulation_button" class="btn btn-primary controlytics-button">
+                            Submit
+                            <i class="fa-solid fa-circle-notch fa-spin" hidden id="add_formulation_button_loader" style="margin-left: 10px;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="formulations-table">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Formulation Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for formulation in formulations %}
+                                <tr>
+                                    <td>{{formulation.name}}</td>
+                                    <td style="display: flex; justify-content:  center">
+                                        <div class="delete-formulation-button-container" style="display: flex;align-items: center">
+                                            <div id="delete_formulation_button_{{formulation.id}}"
+                                                 class="btn btn-primary controlytics-button delete_formulation_button"
+                                                 onclick="deleteFormulation({{formulation.id}})"
+                                                 data-formulation-id="{{formulation.id}}"
+                                            style="background-color: #ce0000">
+                                                DELETE
+                                                <i class="fa-solid fa-circle-notch fa-spin" hidden id="delete_formulation_button_loader_{{formulation.id}}" style="margin-left: 10px;"></i>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            document.getElementById('add_formulation_button').addEventListener('click', function () {
+                document.getElementById('add_formulation_button_loader').removeAttribute('hidden')
+                let formulation_name = document.getElementById('formulation_name_input').value
+                if (formulation_name === '') {
+                    document.querySelector('.formulation-name-error').innerText = 'Formulation name cannot be empty'
+                    document.getElementById('add_formulation_button_loader').setAttribute('hidden', 'true')
+                    return
+                }
+                fetch('/formulations', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: formulation_name
+                    })
+                }).then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    document.getElementById('add_formulation_button_loader').setAttribute('hidden', 'true')
+                    window.location.reload()
+                })
+                .catch(error => {
+                    console.error(error)
+                    document.getElementById('add_formulation_button_loader').setAttribute('hidden', 'true')
+                });
+            });
+        }
+
+        function deleteFormulation(formulationId) {
+            console.log('delete button clicked');
+            let loader = document.getElementById('delete_formulation_button_loader_' + formulationId);
+            loader.removeAttribute('hidden');
+            fetch(`/formulations/${formulationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            }).then(response => response.json())
+            .then(data => {
+                console.log(data);
+                loader.setAttribute('hidden', 'true');
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error(error);
+                loader.setAttribute('hidden', 'true');
+            });
+        }
+
+    </script>
+{% endblock %}

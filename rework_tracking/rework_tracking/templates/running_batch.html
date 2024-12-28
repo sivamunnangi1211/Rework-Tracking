@@ -1,0 +1,218 @@
+{% extends 'components/body.html' %}
+{% block page_title %} Running Batch Details {% endblock %}
+{% block content %}
+    <style>
+
+    </style>
+    <div class="running-batch-main-container" style="margin-top: 30px">
+
+        <div class="controlytics-select-container running-batch-cascade-select-container">
+            <label for="running_batch_cascade_dropdown" class="controlytics-select-label">Cascade Name</label>
+            <select id="running_batch_cascade_dropdown" class="controlytics-select">
+                {% for cascade in cascades %}
+                    <option value="{{ cascade.id }}">{{ cascade.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="controlytics-select-container running-batch-formulation-select-container">
+            <label for="running_batch_formulation_dropdown" class="controlytics-select-label">Formulation Name</label>
+            <select id="running_batch_formulation_dropdown" class="controlytics-select">
+                {% for formulation in formulations %}
+                    <option value="{{ formulation.id }}">{{ formulation.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="controlytics-select-container">
+            <label for="running_batch_from_date" class="controlytics-select-label">From Date:</label>
+            <input type="datetime-local" id="running_batch_from_date" class="controlytics-select" min="{{ min_from_date }}">
+            <span class="from-date-error" style="margin-left: 10px;color: red;"></span>
+        </div>
+        <div class="controlytics-select-container">
+            <label for="running_batch_to_date" class="controlytics-select-label">To Date:</label>
+            <input type="datetime-local" id="running_batch_to_date" class="controlytics-select">
+            <span class="to-date-error" style="margin-left: 10px;color: red;"></span>
+        </div>
+        <div class="running-button-container" style="padding-right: 10px; display: flex; justify-content: center; margin-top: 30px;">
+            <button onclick="stopRunningBatch()" class="controlytics-button" id="running_batch_stop_button">Stop</button>
+            <button onclick="submitBatchDetails()" class="controlytics-button" id="running_batch_submit_button">Submit</button>
+        </div>
+    </div>
+
+    <script>
+        let formulations = {{ formulations|tojson }};
+        let cascades = {{ cascades|tojson }};
+        let runningBatches = {{ running_batches|tojson }};
+        let cascadeToRunningBatch = {};
+        for (let i = 0; i < runningBatches.length; i++) {
+            cascadeToRunningBatch[runningBatches[i].cascade_id] =  runningBatches[i];
+        }
+        console.log(cascadeToRunningBatch);
+
+        window.onload = function() {
+            let cascadeDropdown = document.getElementById('running_batch_cascade_dropdown');
+            let formulationDropdown = document.getElementById('running_batch_formulation_dropdown');
+            let fromDate = document.getElementById('running_batch_from_date');
+            let toDate = document.getElementById('running_batch_to_date');
+            let stopButton = document.getElementById('running_batch_stop_button');
+            let submitButton = document.getElementById('running_batch_submit_button');
+
+            let cascadeId = cascadeDropdown.value;
+            let runningBatch = cascadeToRunningBatch[cascadeId];
+            if (runningBatch) {
+                formulationDropdown.value = runningBatch.formulation_id;
+                fromDate.value = runningBatch.from_date;
+                toDate.value = runningBatch.to_date;
+
+                formulationDropdown.disabled = true;
+                fromDate.disabled = true;
+                toDate.disabled = true;
+
+                stopButton.style.display = 'block';
+                submitButton.style.display = 'none';
+            } else {
+                formulationDropdown.disabled = false;
+                fromDate.disabled = false;
+                toDate.disabled = false;
+                stopButton.style.display = 'none';
+                submitButton.style.display = 'block';
+            }
+
+            cascadeDropdown.onchange = function() {
+                let cascadeId = cascadeDropdown.value;
+                let runningBatch = cascadeToRunningBatch[cascadeId];
+                if (runningBatch) {
+                    formulationDropdown.value = runningBatch.formulation_id;
+                    fromDate.value = runningBatch.from_date;
+                    toDate.value = runningBatch.to_date;
+
+                    formulationDropdown.disabled = true;
+                    fromDate.disabled = true;
+                    toDate.disabled = true;
+
+                    stopButton.style.display = 'block';
+                    submitButton.style.display = 'none';
+                } else {
+                    formulationDropdown.disabled = false;
+                    fromDate.disabled = false;
+                    toDate.disabled = false;
+                    stopButton.style.display = 'none';
+                    submitButton.style.display = 'block';
+                }
+            }
+
+            if (window.location.search) {
+                let urlParams = new URLSearchParams(window.location.search);
+                let cascadeId = urlParams.get('cascade_id');
+                if (cascadeId) {
+                    cascadeDropdown.value = cascadeId;
+                    let runningBatch = cascadeToRunningBatch[cascadeId];
+                    if (runningBatch) {
+                        formulationDropdown.value = runningBatch.formulation_id;
+                        fromDate.value = runningBatch.from_date;
+                        toDate.value = runningBatch.to_date;
+
+                        formulationDropdown.disabled = true;
+                        fromDate.disabled = true;
+                        toDate.disabled = true;
+
+                        stopButton.style.display = 'block';
+                        submitButton.style.display = 'none';
+                    } else {
+                        formulationDropdown.disabled = false;
+                        fromDate.disabled = false;
+                        toDate.disabled = false;
+                        stopButton.style.display = 'none';
+                        submitButton.style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        function submitBatchDetails() {
+            clearErrors();
+            let cascadeDropdown = document.getElementById('running_batch_cascade_dropdown');
+            let formulationDropdown = document.getElementById('running_batch_formulation_dropdown');
+            let fromDate = document.getElementById('running_batch_from_date');
+            let toDate = document.getElementById('running_batch_to_date');
+            let now = new Date();
+            now.setHours(0, 0, 0, 0)
+            if (fromDate.value === '' || toDate.value === '') {
+                $('.from-date-error').text(fromDate.value === '' ? 'From date is required' : '');
+                $('.to-date-error').text(toDate.value === '' ? 'To date is required' : '');
+                return;
+            }
+
+            let from = new Date(fromDate.value);
+            let to = new Date(toDate.value);
+
+
+            if (from > to) {
+                $('.to-date-error').text('To date should be greater than from date');
+                return;
+            }
+
+            from.setHours(0, 0, 0, 0);
+            if (from < now) {
+                $('.from-date-error').text('From date should be greater than or equal to today');
+                return;
+            }
+
+
+            let formData = {
+                cascade_id: cascadeDropdown.value,
+                cascade_name: cascades.find(cascade => cascade.id === cascadeDropdown.value).name,
+                formulation_id: formulationDropdown.value,
+                formulation_name: formulations.find(formulation => formulation.id == formulationDropdown.value).name,
+                from_date: fromDate.value,
+                to_date: toDate.value
+            };
+
+            fetch('/running_batch/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data['status'] === 'success') {
+                    console.log('Successfully saved running batch:', data.message);
+                    window.location.href = '/running_batch?cascade_id=' + formData.cascade_id;
+                } else {
+                    console.error('Failed to save running batch:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function clearErrors() {
+            $('.from-date-error').text('');
+            $('.to-date-error').text('');
+        }
+
+        function stopRunningBatch() {
+            let cascadeDropdown = document.getElementById('running_batch_cascade_dropdown');
+            let cascadeId = cascadeDropdown.value;
+            fetch('/running_batch/stop',  {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({cascade_id: cascadeId, batch_id: cascadeToRunningBatch[cascadeId].id})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data['status'] === 'success') {
+                    console.log('Successfully stopped running batch:', data.message);
+                    window.location.href = '/running_batch?cascade_id=' + cascadeId;
+                } else {
+                    console.error('Failed to stop running batch:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+{% endblock %}

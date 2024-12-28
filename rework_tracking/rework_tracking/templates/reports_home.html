@@ -1,0 +1,77 @@
+{% extends 'components/body.html' %}
+{% block page_title %} Reports {% endblock %}
+{% block content %}
+    <style>
+        .report-card {
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+        .report-card .card-title {
+            margin-bottom: 20px;
+            font-size: x-large;
+        }
+    </style>
+    <div class="reports-home-container" style="margin-top: 40px">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Submitted Tags Report</h5>
+                                <p class="card-text">Report containing all Submitted Tags and their details ordered by time</p>
+                                <a href="/reports/submitted_report" class="card-link view-report-link">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Age Report</h5>
+                                <p class="card-text">Report showing all Submitted tags, both processed and waiting tags and their age (Submission to Processing time)</p>
+                                <a href="/reports/age_report" class="card-link view-report-link">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Consumption Report</h5>
+                                <p class="card-text">Report showing Consumption details of both Mixer A and Mixer B along with number of wrong attempts.</p>
+                                <a href="/reports/consumption_report" class="card-link view-report-link">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Rework Generation Report</h5>
+                                <p class="card-text">Report showing Metal vs Non-Metal Scrap generated per Shift/Day/Week</p>
+                                <a href="/reports/rework_generation_report" class="card-link view-report-link">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Rejected Tags Report</h5>
+                                <p class="card-text">Report all the rejections happening at Mixer A and Mixer B</p>
+                                <a href="/reports/rejected_tags_report" class="card-link view-report-link">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Running Batch History Report</h5>
+                                <p class="card-text">Report showing history of all batches, their start time and end time and current status</p>
+                                <a href="/reports/running_batch_report" class="card-link view-report-link">View Report</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,8 @@
+192.168.1.106  :  plodder 1(cascade B plodder)
+192.168.1.102  :  plodder 2(cascade C plodder)
+192.168.1.103  :  chilled drum a(Cascade B chilledDrum)
+192.168.1.101  :  chilled drum b(Cascade C chilledDrum)
+192.168.1.105  :  mixer b(cascade c mixer)
+192.168.1.104  :  mixer a(cascade B mixer)
+192.168.1.107  :  new plodder 2 reader 1(Plodder B new Reader)
+192.168.1.108  :  new plodder 1 reader (Plodder C new Reader)                                                                                                             

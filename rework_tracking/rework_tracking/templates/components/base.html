@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controlytics AI | Rework Management</title>
+    <link rel="stylesheet" href="../../static/bootstrap_5.0.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/fontawesome_6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../../static/css/common_styles.css">
+    <link rel="stylesheet" href="../../static/css/loader.min.css">
+    {%  include 'components/common_scripts.html' %}
+    <style>
+        .main_container {
+            min-width: 100%;
+            padding: 0;
+            display: flex;
+        }
+        .body_content {
+            min-width: calc(100% - 90px);
+            padding-left: 15px;
+            padding-top: 15px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header_content">
+        {% include 'components/header.html' %}
+    </div>
+    <div class="main_container">
+        <div class="sidebar_content">
+            {% include 'components/sidebar.html' %}
+        </div>
+        <div class="body_content">
+            {% block body %}{% endblock %}
+        </div>
+    </div>
+
+
+    <script src="../../static/bootstrap_5.0.2/js/bootstrap.min.js"></script>
+    <script src="../../static/js/jquery-3.7.1.min.js"></script>
+    <script src="../../static/xlsx_0.20.2/dist/xlsx.full.min.js"></script>
+</body>
+</html>
+

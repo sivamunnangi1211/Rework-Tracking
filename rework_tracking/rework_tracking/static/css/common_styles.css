@@ -1,0 +1,103 @@
+.controlytics-button {
+    padding: 10px 40px;
+    background-color: #4169e1;
+    color: white;
+    font-size: large;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 10px;
+    border: 0;
+    box-shadow: 1px 1px 4px 1px #cbcbcb;
+}
+
+.controlytics-button:hover {
+    box-shadow: 5px 5px 13px 4px #cbcbcb;
+    background-color: #2c4aa5;
+}
+
+.controlytics-select-container {
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    margin-right: 40px;
+}
+
+.controlytics-select-label {
+    font-size: large;
+    margin-bottom: 10px;
+}
+
+.controlytics-select {
+    border: 1px solid black;
+    padding: 10px 20px;
+    font-size: x-large;
+    border-radius: 10px;
+}
+
+.controlytics-select:disabled {
+    background-color: #eaeaea;
+}
+
+.controlytics-error-toast {
+    color: red;
+}
+
+.controlytics-toast {
+
+}
+
+.controlytics-success-toast {
+    color: green;
+}
+
+.toast-header {
+    font-size: x-large;
+}
+
+.toast {
+    width: 500px !important;
+}
+
+.toast-header .btn-close {
+    font-size: small !important;
+}
+
+.toast-body {
+    font-size: medium;
+    font-style: italic;
+}
+
+.reports-table-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+.reports-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.reports-table-container table thead {
+    background-color: royalblue;
+    color: white;
+}
+.reports-table-container table thead th {
+    padding: 10px;
+    cursor: pointer;
+    font-size: large;
+    line-height: 30px;
+    text-align: center;
+    border: 1px dotted black;
+}
+.reports-table-container table tbody tr td {
+    padding: 10px;
+    cursor: pointer;
+    line-height: 30px;
+    font-size: large;
+    border: 1px dotted black;
+}
+.reports-table-container table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+.reports-table-container table tbody tr:hover {
+    background-color: #ddd;
+}

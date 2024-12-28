@@ -1,0 +1,16 @@
+{% extends 'components/base.html' %}
+
+{% block body %}
+<style>
+    .main_body .heading {
+    }
+    .main_body .main_body_context {
+    }
+</style>
+<div class="main_body">
+    <h1 class="heading">{% block page_title %} {% endblock %}</h1>
+    <div class="main_body_context">
+        {% block content %} {% endblock %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+<script>
+    function updateShiftAndDate() {
+        let date = new Date();
+        let hours = date.getHours();
+
+        let  shift;
+        if (hours >= 6 && hours < 14) {
+            shift = "A Shift";
+        } else if (hours >= 14 && hours < 22) {
+            shift = "B Shift";
+        } else {
+            shift = "C Shift";
+        }
+
+        let dateString = date.toLocaleDateString();
+        let timeString = date.toLocaleTimeString();
+
+        let shiftAndDate = document.getElementById("shift_and_time_value");
+        if (shiftAndDate != null) {
+            shiftAndDate.innerText = shift + " : " + dateString + " " + timeString;
+        }
+    }
+    window.onload = updateShiftAndDate;
+    setInterval(updateShiftAndDate, 1000);
+</script>

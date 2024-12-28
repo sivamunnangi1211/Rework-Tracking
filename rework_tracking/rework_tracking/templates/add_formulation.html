@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Formulation</title>
+</head>
+<body>
+    <h2>Enter New Formulation Name</h2>
+    <form id="addFormulationForm">
+        <label for="newFormulationName">New Formulation Name:</label>
+        <input type="text" id="newFormulationName" required>
+        <button type="button">Add</button>
+    </form>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var addFormulationButton = document.getElementById("addFormulationButton");
+            addFormulationButton.addEventListener("click", function(event) {
+                event.preventDefault(); // Prevent default form submission behavior
+                addNewFormulation();
+            });
+        });
+    
+        function addNewFormulation() {
+            var newFormulationName = document.getElementById("newFormulationName").value;
+            var select = document.getElementById("formulation-select");
+    
+            // Check if the new formulation name already exists in the dropdown
+            var options = select.options;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value === newFormulationName) {
+                    alert("Formulation name already exists!");
+                    return; // Exit the function if the formulation name already exists
+                }
+            }
+    
+            // Create a new option element
+            var option = document.createElement("option");
+            option.text = newFormulationName;
+            option.value = newFormulationName;
+    
+            // Add the new option to the dropdown
+            select.add(option);
+    
+            // Optionally, clear the input field after adding the formulation name
+            document.getElementById("newFormulationName").value = "";
+        }
+    </script>
+    
+</body>
+</html>

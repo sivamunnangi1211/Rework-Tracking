@@ -1,0 +1,250 @@
+{% extends 'components/body.html' %}
+{% block page_title %} Manage Users {% endblock %}
+{% block content %}
+    <style>
+        .manage-users-container th {
+            font-size: xx-large;
+            font-weight: 500;
+            color: #000;
+            text-align: center;
+        }
+        .manage-users-container tr {
+            line-height: 50px;
+        }
+        .manage-users-container td {
+            font-size: x-large;
+            font-weight: 400;
+            color: #000;
+        }
+    </style>
+    <div class="manage-users-container">
+        <div class="row">
+            <div class="col-md-12" >
+                <div class="manage-users-add-user" style="margin-top: 30px; margin-bottom: 50px; border: solid 1px black; border-radius: 10px; padding: 20px">
+                    <div class="row">
+                        <div style="display: flex; flex-direction: row; justify-content: space-between">
+                            <div class="controlytics-select-container" style="width: 100%">
+                                <input type="text" id="user_name_input" class="controlytics-select" placeholder="Username">
+                                <span class="user-name-error" style="margin-left: 10px;color: red;"></span>
+                            </div>
+                            <div class="controlytics-select-container" style="width: 100%">
+                                <input type="text" id="password_input" class="controlytics-select" placeholder="Password">
+                                <span class="password-error" style="margin-left: 10px;color: red;"></span>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between">
+                            <div class="controlytics-select-container" style="width: 100%;">
+                                <input type="text" id="name_input" class="controlytics-select" placeholder="Name">
+                                <span class="name-error" id="name_error" style="margin-left: 10px;color: red;"></span>
+                            </div>
+                            <div class="controlytics-select-container" style="width: 100%">
+                                <select id="usertype_select" class="usertype-select controlytics-select">
+                                    <option value="admin" >Admin</option>
+                                    <option value="supervisor">Supervisor</option>
+                                    <option value="operator">Operator</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="user-submit-button-container" style="display: flex;
+                         justify-content: right; margin-top: 10px; margin-right: 40px">
+                        <div id="user_details_add_button" class="btn btn-primary user_details_add_button controlytics-button">
+                            Add
+                            <i class="fa-solid fa-circle-notch fa-spin" hidden id="user_details_add_button_loader" style="margin-left: 10px;"></i>
+                        </div>
+                    </div>
+                </div>
+            <div>
+                <h3> Current Users:</h3>
+            </div>
+                {% for each_user in users %}
+                    <div class="manage-users-update-user"
+                         style="border: solid 1px black; border-radius: 10px; margin: 20px 0; padding: 20px 20px">
+                        <div class="row">
+                            <div style="display: flex; flex-direction: row; justify-content: space-between">
+                                <div class="controlytics-select-container" style="width: 100%">
+                                    <input type="text" id="user_name_input_{{ each_user.user_id }}" class="controlytics-select" disabled placeholder="Username"
+                                    value="{{ each_user.username }}">
+                                    <span class="user-name-error" id="user_name_error_{{ each_user.user_id }}" style="margin-left: 10px;color: red;"></span>
+                                </div>
+                                <div class="controlytics-select-container" style="width: 100%">
+                                    <input type="password" id="password_input_{{ each_user.user_id }}" class="controlytics-select" placeholder="Password"
+                                    value="">
+                                    <span class="password-error" id="password_error_{{ each_user.user_id }}" style="margin-left: 10px;color: red;"></span>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between">
+                                <div class="controlytics-select-container" style="width: 100%;">
+                                    <input type="text" id="name_input_{{ each_user.user_id }}" class="controlytics-select" placeholder="Name"
+                                    value="{{ each_user.name }}">
+                                    <span class="name-error" id="name_error_{{ each_user.user_id }}" style="margin-left: 10px;color: red;"></span>
+                                </div>
+                                <div class="controlytics-select-container" style="width: 100%;">
+                                    <select id="usertype_select_{{ each_user.user_id }}" disabled class="usertype-select controlytics-select">
+                                        <option value="admin">Admin</option>
+                                        <option value="supervisor">Supervisor</option>
+                                        <option value="operator">Operator</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user-details-edit-button-container" style="display: flex;
+                         justify-content: right; margin-top: 10px; margin-right: 40px">
+                            <div id="user_details_update_button_{{ each_user.user_id }}"
+                                 class="btn btn-primary user_details_update_button controlytics-button"
+                                 onclick="updateUser('{{ each_user.user_id }}')"
+                                 data-user-id="{{each_user.user_id}}"
+                            style="margin-right: 20px">
+                                Update
+                                <i class="fa-solid fa-circle-notch fa-spin" hidden id="user_details_update_button_loader_{{ each_user.user_id }}" style="margin-left: 10px;"></i>
+                            </div>
+                            {% if (each_user.user_id != session['user_id']) %}
+                                <div id="user_details_delete_button_{{ each_user.user_id }}"
+                                     class="btn btn-primary user_details_delete_button controlytics-button"
+                                     onclick="deleteUser('{{ each_user.user_id }}')"
+                                     data-user-id="{{each_user.user_id}}" style="background-color: #ce0000">
+                                    Delete
+                                    <i class="fa-solid fa-circle-notch fa-spin" hidden id="user_details_delete_button_loader_{{ each_user.user_id }}" style="margin-left: 10px;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let users = {{ users|tojson }};
+        window.onload = function () {
+            setUsers();
+            let userAddButton = document.getElementById('user_details_add_button');
+            userAddButton.addEventListener('click', function () {
+                let username = document.getElementById('user_name_input').value;
+                let password = document.getElementById('password_input').value;
+                let name = document.getElementById('name_input').value;
+                let userType = document.getElementById('usertype_select').value;
+                let userError = document.querySelector('.user-name-error');
+                let passwordError = document.querySelector('.password-error');
+                if (username === '') {
+                    userError.innerHTML = 'Username is required';
+                }
+                if (password === '') {
+                    passwordError.innerHTML = 'Password is required';
+                }
+                if (name === '') {
+                    document.getElementById('name_error').innerHTML = 'Name is required';
+                    return;
+                }
+
+                let loader = document.getElementById('user_details_add_button_loader');
+                userAddButton.classList.add('disabled');
+                loader.removeAttribute('hidden');
+                fetch('/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        name: name,
+                        user_type: userType
+                    })
+                }).then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data['status'] === 'success') {
+                        userAddButton.classList.remove('disabled');
+                        loader.setAttribute('hidden', 'true');
+                        window.location.reload()
+                    } else if (data['status'] === 'error') {
+                        userAddButton.classList.remove('disabled');
+                        loader.setAttribute('hidden', 'true');
+                        if (data['status_code'] === 'username_exists') {
+                            userError.innerHTML = 'Username already mapped to a user,';
+                        } else if (data['status_code'] === 'username_exists_deleted') {
+                            userError.innerHTML = 'Username already used for a user, but user was deleted. Cannot reuse the same username';
+                        }
+                    }
+                    //window.location.reload();
+                })
+                .catch(error => {
+                    console.error(error);
+                    userAddButton.classList.remove('disabled');
+                    loader.setAttribute('hidden', 'true');
+                });
+            });
+        }
+
+
+        function deleteUser(user_id) {
+            let userDeleteButton = document.getElementById('user_details_delete_button_' + user_id);
+            let loader = document.getElementById('user_details_delete_button_loader_' + user_id);
+            userDeleteButton.classList.add('disabled');
+            loader.removeAttribute('hidden');
+            fetch('/users/' + user_id, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then(data => {
+                console.log(data);
+                userDeleteButton.classList.remove('disabled');
+                loader.setAttribute('hidden', 'true');
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error(error);
+                userDeleteButton.classList.remove('disabled');
+                loader.setAttribute('hidden', 'true');
+            });
+        }
+
+        function updateUser(user_id) {
+            let name = document.getElementById('name_input_' + user_id).value;
+            let password = document.getElementById('password_input_' + user_id).value;
+            //let userType = document.getElementById('usertype_select_' + user_id).value;
+            let userError = document.getElementById('user_name_error_' + user_id);
+            let passwordError = document.getElementById('password_error_' + user_id);
+            if (name === '') {
+                userError.innerHTML = 'Name is required';
+                return;
+            }
+            let userUpdateButton = document.getElementById('user_details_update_button_' + user_id);
+            let loader = document.getElementById('user_details_update_button_loader_' + user_id);
+            userUpdateButton.classList.add('disabled');
+            loader.removeAttribute('hidden');
+            fetch('/users/' + user_id, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    password: password,
+                })
+            }).then(response => response.json())
+            .then(data => {
+                console.log(data);
+                userUpdateButton.classList.remove('disabled');
+                loader.setAttribute('hidden', 'true');
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error(error);
+                userUpdateButton.classList.remove('disabled');
+                loader.setAttribute('hidden', 'true');
+            });
+        }
+
+        function setUsers() {
+            users.forEach(user => {
+                let userTypeSelect = document.getElementById('usertype_select_' + user.user_id);
+                userTypeSelect.value = user.user_type;
+            });
+        }
+
+    </script>
+{% endblock %}

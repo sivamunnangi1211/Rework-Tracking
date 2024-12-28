@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Details</title>
+    <!-- Add any additional CSS styling here -->
+    <style>
+        /* Add your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 30px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            cursor: pointer;
+            background-color: #f2f2f2;
+        }
+        .export-button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .export-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Running Batch Details</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cascade</th>
+                <th>User Defined Cascade</th>
+                <th>From Date</th>
+                <th>To Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.cascade }}</td>
+                <td>{{ row.user_defined_cascade }}</td>
+                <td>{{ row.from_date }}</td>
+                <td>{{ row.to_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="export-button-container">
+        <button class="export-button" onclick="exportToExcel()">Export as Excel</button>
+    </div>
+
+    <script>
+        function exportToExcel() {
+            const table = document.querySelector('table');
+            const rows = table.querySelectorAll('tr');
+            const data = [];
+            for (const row of rows) {
+                const rowData = [];
+                for (const cell of row.querySelectorAll('td, th')) {
+                    rowData.push(cell.innerText);
+                }
+                data.push(rowData.join('\t'));
+            }
+            const blob = new Blob([data.join('\n')], { type: 'application/vnd.ms-excel' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'running_batch_details.xls';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
